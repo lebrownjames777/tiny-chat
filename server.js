@@ -1,19 +1,24 @@
-const { app, BrowserWindow } = require("electron");
-const path = require("path");
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 
-function createWindow() {
-    const win = new BrowserWindow({
-        width: 900,
-        height: 650,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
-        }
+const app = express();
+const server = http.createServer(app);
+
+const io = new Server(server, {
+    cors: { origin: "*" }
+});
+
+io.on("connection", (socket) => {
+    console.log("User connected:", socket.id);
+
+    socket.on("chat-message", (msg) => {
+        io.emit("chat-message", msg);
     });
+});
 
-    win.loadFile(path.join(__dirname, "login.html")); //START HERE
+const PORT = process.env.PORT || 3000;
 
-    win.setMenuBarVisibility(false);
-}
-
-app.whenReady().then(createWindow);
+server.listen(PORT, () => {
+    console.log("Server running on port", PORT);
+});
